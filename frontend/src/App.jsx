@@ -9,6 +9,7 @@ import Role from './Components/Auth/Role'
 import Patient from './Components/Auth/Patient'
 import WelcomPage from './Components/Auth/WelcomPage'
 import Verification from './Components/Auth/Verification'
+import PendingApproval from './Pages/PendingApproval';
 
 function App() {
   return (
@@ -25,7 +26,7 @@ function App() {
           <Route path='/Doctor'  element={<Doctor/>} />
            <Route path='/Patient'  element={<Patient/>} />
             <Route path='/Verification' element={<Verification/>}/>
- 
+              <Route path="/pending"  element={<PendingApproval/>}/>
         </Routes>
       
       

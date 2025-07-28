@@ -1,8 +1,9 @@
 const users = require('../modals/User');
 const Patient = require('../modals/Patients');
 const bcrypt = require('bcryptjs');
-const User = require('../modals/User');
+
 const Doctor=require('../modals/Doctor')
+
 const {generateotp,sendOtpEmail}=require('../utilits/otpUtils')
 const Otp=require('../modals/Otp')
 
@@ -22,9 +23,26 @@ exports.registerpatient = async (req, res) => {
 
    
     const existing = await users.findOne({ email });
-    if (existing) {
+    if (existing&&existing.isVerfied) {
       return res.status(409).json({ message: 'Email already in use' });
     }
+
+
+    if(existing && !existing.isVerified){
+      const latestOtp = await Otp.findOne({ email }).sort({ createdAt: -1 });
+      const otpExpired = !latestOtp || latestOtp.expiresAt < new Date();
+
+      if (!otpExpired) {
+        return res.status(409).json({
+          message: 'OTP already sent. Please verify or wait for OTP to expire.',
+        });
+      }
+
+      
+      await users.deleteOne({ email });
+      await Otp.deleteMany({ email });
+    }
+
 
     
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -91,7 +109,7 @@ exports.registerdoctor=async(req,res)=>{
       await Otp.create({ email, otp:otpCode,expiresAt });
       await sendOtpEmail(email, otpCode);
 
-         return res.status(201).json({message:"Registered"})
+         return res.status(201).json({message:"Registered",email:doctor.email})
 
     } catch (error) {
         

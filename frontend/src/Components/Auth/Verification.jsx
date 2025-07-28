@@ -1,13 +1,17 @@
-import React from 'react';
+import React, { useState,useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useFormik } from 'formik';
 import * as Yup from 'yup'
 import axios from '../../Axios/axios';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 function Verification() {
  
   const navigate=useNavigate()
 
+   const [isLoading, setIsLoading] = useState(false);
+   const[resend,setResend]=useState(false);
+   const [timer, setTimer] = useState(60);
 
 const formik=useFormik({
   initialValues:({
@@ -20,18 +24,59 @@ const formik=useFormik({
   }),
   onSubmit:async(values)=>{
     console.log(values);
+      setIsLoading(true);
     try {
       const email=localStorage.getItem("email")
       
       const res=await axios.post("/Verification",{otp:values,email:email})
-      console.log(res);
-      navigate("/signin")
+      console.log(res.data.role);
+      localStorage.removeItem("email")
+      toast.success("Verified Successfully")
+      if(res.data.role==doctor){
+        navigate("/pending")
+      }
+       navigate("/signin")
     } catch (error) {
       
+    }finally{
+      setIsLoading(false)
     }
     
   }
 })
+
+useEffect(() => {
+  let countdown;
+  if (!resend && timer > 0) {
+    countdown = setTimeout(() => {
+      setTimer(prev => prev - 1);
+    }, 1000);
+  } else if (timer === 0) {
+    setResend(true);
+  }
+
+  return () => clearTimeout(countdown);
+}, [timer, resend]);
+
+
+
+const handleresend=async(e)=>{
+    e.preventDefault();
+      if(!resend) return
+     try {
+         const email=localStorage.getItem("email")
+         console.log("resend",email);
+         
+         const res=await axios.post("/Resend",{email})  
+          toast.success("otp resended")
+         setResend(false);
+         setTimer(60);
+         console.log(res.data.message);
+
+     } catch (error) {
+      
+     }
+}
 
 
 
@@ -80,21 +125,53 @@ const formik=useFormik({
             )}
           </div>
 
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            type="submit"
-            className="w-full bg-teal-600 hover:bg-teal-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 shadow-md"
-          >
-            Verify OTP
-          </motion.button>
+           <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        type="submit"
+                        disabled={isLoading}
+                        className={`w-full ${
+                          isLoading ? 'bg-teal-400 cursor-not-allowed' : 'bg-teal-600 hover:bg-teal-700'
+                        } text-white font-medium py-3 px-4 rounded-lg transition duration-200 shadow-md flex items-center justify-center`}
+                      >
+                        {isLoading ? (
+                          <svg
+                            className="animate-spin h-5 w-5 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                            />
+                          </svg>
+                        ) : (
+                          'Complete Verification'
+                        )}
+                      </motion.button>
         </form>
 
         <div className="mt-4 text-sm text-gray-600 text-center">
           Didn’t get the code?{' '}
-          <button className="font-medium text-teal-600 hover:underline">
-            Resend OTP
-          </button>
+          <button
+  onClick={handleresend}
+  className={`font-medium ${
+    resend ? "text-teal-600 hover:underline" : "text-gray-400 cursor-not-allowed"
+  }`}
+  disabled={!resend}
+>
+  {resend ? "Resend OTP" : `Resend in ${timer}s`}
+</button>
         </div>
       </motion.div>
     </div>

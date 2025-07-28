@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema({
   profileImage: String,
   role: { type: String, enum: ['doctor', 'patient', 'admin'], required: true },
   isActive: { type: Boolean, default: true },
+  isVerfied:{ type: Boolean, default:false },
   googleId: String
 }, options);
 

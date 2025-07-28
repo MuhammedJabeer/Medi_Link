@@ -1,13 +1,16 @@
 import React from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {useFormik} from  'formik'
 import * as Yup from 'yup'
-import axios from 'axios'
+import axios from '../../Axios/axios'
 import { useState } from 'react'
+import { toast } from 'react-toastify'
 
 function Doctor() {
-   
+ 
+const navigate=useNavigate()
+
 const [isLoading, setIsLoading]=useState(false)
 
        const formik=useFormik({
@@ -66,8 +69,11 @@ const [isLoading, setIsLoading]=useState(false)
                 
            const res=await axios.post("/registerdoctor",values)
            console.log(res.data.message);
-          resetForm()
-
+            const email=res.data.email
+            localStorage.setItem("email",email)
+           resetForm()
+           toast("Registerd Successfully Otp sended to Email")
+           navigate('/Verification')
           } catch (error) {
             
           }finally{

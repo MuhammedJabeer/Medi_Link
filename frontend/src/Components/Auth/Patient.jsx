@@ -6,6 +6,7 @@ import * as Yup from 'yup'
 // import Role from './Role'
 import axios from '../../Axios/axios'
 import { useState } from 'react'
+import { toast } from 'react-toastify'
 function Patient() {
 
 const [isLoading, setIsLoading] = useState(false);
@@ -67,8 +68,9 @@ const [isLoading, setIsLoading] = useState(false);
             console.log(res.data.user.email);
             const email=res.data.user.email
             localStorage.setItem("email",email)
+    
             resetForm();
-            
+             toast.success("Registerd Succesfully otp Sended to email")
             navigate('/Verification')
          } catch (error) {
           
