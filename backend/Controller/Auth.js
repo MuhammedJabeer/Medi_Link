@@ -1,4 +1,9 @@
+require("dotenv").config()
+
+
 const users = require('../modals/User');
+
+
 const Patient = require('../modals/Patients');
 const bcrypt = require('bcryptjs');
 
@@ -6,6 +11,9 @@ const Doctor=require('../modals/Doctor')
 
 const {generateotp,sendOtpEmail}=require('../utilits/otpUtils')
 const Otp=require('../modals/Otp')
+const jwt=require('jsonwebtoken');
+const { path } = require("../app");
+
 
 exports.registerpatient = async (req, res) => {
   try {
@@ -114,4 +122,83 @@ exports.registerdoctor=async(req,res)=>{
     } catch (error) {
         
     }
+}
+
+
+
+exports.Login=async(req,res)=>{
+  try {
+        console.log(req.body);
+
+        const {email,password}=req.body
+           console.log(email)
+           console.log(password);
+      
+        const User=await users.findOne({email})
+        console.log("hello",User);
+        
+        if(!User){
+          console.log("user not founded");
+          
+          res.status(400).json({message:"user not founded"})
+        }
+        
+        const match=await bcrypt.compare(password,User.password)
+        console.log(match);
+        
+        if(!match){
+           console.log("paswword not match");
+           
+           return res.status(401).json({message:"Incorrect password"})
+        }
+
+
+        const token=jwt.sign({id:User._id,name:User.name,email:User.email,role:User.role},process.env.SECRET_KEY,{
+          expiresIn:"1h",
+        })
+        // console.log("token",toekn);
+        
+
+        res.cookie("token", token, {
+        httpOnly:true,     
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path:"/", 
+        maxAge: 60 * 60 * 1000 
+         });
+
+      return res.status(200).json({user:User, role: User.role, message: "Login successful" });
+        
+         
+
+        
+  } catch (error) {
+    
+  }
+}
+
+
+
+
+
+
+
+
+
+exports.logout=async(req,res)=>{
+  try {
+        
+        res.clearCookie("token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+         path: "/"
+        });
+
+
+  return res.status(200).json({ message: "Logout successful" });
+
+  } catch (error) {
+    
+  }
 }

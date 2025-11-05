@@ -64,7 +64,7 @@ const [isLoading, setIsLoading] = useState(false);
       const role=localStorage.getItem("role")
         console.log(role);   
          try {
-            const res=await axios.post("/registerpatient",values)
+            const res=await axios.post("/registerpatient",values,{withCredentials: true})
             console.log(res.data.user.email);
             const email=res.data.user.email
             localStorage.setItem("email",email)

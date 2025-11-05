@@ -67,7 +67,7 @@ const [isLoading, setIsLoading]=useState(false)
           console.log("doctor",values);
           try {
                 
-           const res=await axios.post("/registerdoctor",values)
+           const res=await axios.post("/registerdoctor",values,{withCredentials: true})
            console.log(res.data.message);
             const email=res.data.email
             localStorage.setItem("email",email)

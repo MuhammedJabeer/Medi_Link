@@ -28,14 +28,16 @@ const formik=useFormik({
     try {
       const email=localStorage.getItem("email")
       
-      const res=await axios.post("/Verification",{otp:values,email:email})
+      const res=await axios.post("/Verification",{otp:values,email:email},{withCredentials: true})
       console.log(res.data.role);
       localStorage.removeItem("email")
       toast.success("Verified Successfully")
-      if(res.data.role==doctor){
+      if(res.data.role==="doctor"){
         navigate("/pending")
+      }else if(res.data.role==="patient"){
+             navigate("/signin")
       }
-       navigate("/signin")
+       
     } catch (error) {
       
     }finally{

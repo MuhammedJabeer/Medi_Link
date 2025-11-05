@@ -1,10 +1,16 @@
 import React from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink,useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {useFormik}  from 'formik'
 import * as Yup from 'yup'
 import { toast } from 'react-toastify'
+import axios from '../../Axios/axios'
+import { useDispatch } from 'react-redux'
+import { loginSuccess } from '../../redux/authSlice'
 function Signin() {
+
+  const navigate=useNavigate()
+  const dispatch = useDispatch();
 
       const formik=useFormik({
        initialValues:{
@@ -23,9 +29,29 @@ function Signin() {
       'Password must have at least 1 uppercase, 1 lowercase, 1 number, 1 special character and be 6+ characters'
        ).required("password is required")
        }),
-       onSubmit:(value)=>{
-        console.log('Form submitted:', value);
-        toast.success("qwfegrfhgnj")
+       onSubmit:async(value)=>{
+        try {
+              const res=await axios.post("/login",value,{withCredentials: true})
+              toast.success("success")
+
+                dispatch(loginSuccess(res.data))
+             
+              console.log(res.data.user);
+              if(res.data.role==="doctor"){
+                        navigate("/Dashboard")
+              }else{
+                    navigate('/board')
+              }
+              // navigate('/board')
+            
+              
+        } catch (error) {
+          
+        }
+       
+
+
+
        }
        
       })

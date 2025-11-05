@@ -17,19 +17,21 @@ const appointmentSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['booked', 'completed', 'cancelled'],
+    enum: ['booked', 'completed', 'cancelled','pending'],
     default: 'booked',
   },
   notes: String,
   paymentStatus: {
     type: String,
-    enum: ['paid', 'unpaid'],
-    default: 'unpaid',
+    enum: ['Paid', 'Pending',"Failed"],
+    default: 'Pending',
   },
-  paymentId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Payment',
-  },
+   token: { type: Number },
+  // paymentId: {
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: 'Payment',
+  // },
+ 
 }, { timestamps: true });
 
 

@@ -8,6 +8,8 @@ const cors=require('cors')
 
 var usersRouter = require('./routes/users');
 const otpRouter=require('./routes/otp')
+const PatientRouter=require('./routes/Patient')
+const DoctorRouter=require('./routes/Doctor')
 var app = express();
 
 const Db=require('./connect/Db')
@@ -21,11 +23,18 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true,
+  methods: ["GET","POST","OPTIONS"],
+  allowedHeaders: ["Content-Type","Authorization"] // <- server must allow these
+}));
 
 // app.use('/', indexRouter);
 app.use('/', usersRouter);
-app.use('/',otpRouter)
+app.use('/',otpRouter);
+app.use('/',PatientRouter)
+app.use('/',DoctorRouter)
 
 const PORT=process.env.PORT || 4000
 
