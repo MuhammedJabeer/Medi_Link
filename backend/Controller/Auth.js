@@ -7,12 +7,13 @@ const users = require('../modals/User');
 const Patient = require('../modals/Patients');
 const bcrypt = require('bcryptjs');
 
-const Doctor=require('../modals/Doctor')
+const Doctor = require('../modals/Doctor')
 
-const {generateotp,sendOtpEmail}=require('../utilits/otpUtils')
-const Otp=require('../modals/Otp')
-const jwt=require('jsonwebtoken');
+const { generateotp, sendOtpEmail } = require('../utilits/otpUtils')
+const Otp = require('../modals/Otp')
+const jwt = require('jsonwebtoken');
 const { path } = require("../app");
+
 
 
 exports.registerpatient = async (req, res) => {
@@ -29,14 +30,14 @@ exports.registerpatient = async (req, res) => {
 
     console.log("Received data:", req.body);
 
-   
+
     const existing = await users.findOne({ email });
-    if (existing&&existing.isVerfied) {
+    if (existing && existing.isVerfied) {
       return res.status(409).json({ message: 'Email already in use' });
     }
 
 
-    if(existing && !existing.isVerified){
+    if (existing && !existing.isVerfied) {
       const latestOtp = await Otp.findOne({ email }).sort({ createdAt: -1 });
       const otpExpired = !latestOtp || latestOtp.expiresAt < new Date();
 
@@ -46,16 +47,16 @@ exports.registerpatient = async (req, res) => {
         });
       }
 
-      
+
       await users.deleteOne({ email });
       await Otp.deleteMany({ email });
     }
 
 
-    
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    
+
     const patient = await Patient.create({
       name: fullname,
       email,
@@ -66,11 +67,11 @@ exports.registerpatient = async (req, res) => {
       gender,
       bloodGroup: bloodgroup,
     });
-     
-      const otpCode=generateotp()
-      const expiresAt=new Date(Date.now() + 5 * 60 * 1000)
-      await Otp.create({ email, otp:otpCode,expiresAt });
-      await sendOtpEmail(email, otpCode);
+
+    const otpCode = generateotp()
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000)
+    await Otp.create({ email, otp: otpCode, expiresAt });
+    await sendOtpEmail(email, otpCode);
 
     return res.status(201).json({
       message: 'Patient registered successfully',
@@ -89,116 +90,175 @@ exports.registerpatient = async (req, res) => {
 
 
 
-exports.registerdoctor=async(req,res)=>{
-    try {
-        
-      const { fullname, email, password, specialization,medicallicenseNumber } = req.body;
-      console.log(req.body);
-
-      const existing=await users.findOne({email})
-
-      if(existing){
-            return res.status(409).json({ message: 'Email already in use' });
-      }
-      
-      const hashpass=await bcrypt.hash(password,10)
-
-      const doctor=await Doctor.create({
-           name:fullname,
-           email,
-           password:hashpass,
-           role: 'doctor',
-           specialization,
-           medicallicenseNumber
-      })
-
-      const otpCode=generateotp()
-      const expiresAt=new Date(Date.now() + 5 * 60 * 1000)
-      await Otp.create({ email, otp:otpCode,expiresAt });
-      await sendOtpEmail(email, otpCode);
-
-         return res.status(201).json({message:"Registered",email:doctor.email})
-
-    } catch (error) {
-        
-    }
-}
-
-
-
-exports.Login=async(req,res)=>{
+exports.registerdoctor = async (req, res) => {
   try {
-        console.log(req.body);
 
-        const {email,password}=req.body
-           console.log(email)
-           console.log(password);
-      
-        const User=await users.findOne({email})
-        console.log("hello",User);
-        
-        if(!User){
-          console.log("user not founded");
-          
-          res.status(400).json({message:"user not founded"})
-        }
-        
-        const match=await bcrypt.compare(password,User.password)
-        console.log(match);
-        
-        if(!match){
-           console.log("paswword not match");
-           
-           return res.status(401).json({message:"Incorrect password"})
-        }
+    const { fullname, email, password, specialization, medicallicenseNumber } = req.body;
+    console.log(req.body);
 
+    const existing = await users.findOne({ email })
 
-        const token=jwt.sign({id:User._id,name:User.name,email:User.email,role:User.role},process.env.SECRET_KEY,{
-          expiresIn:"1h",
-        })
-        // console.log("token",toekn);
-        
+    if (existing) {
+      return res.status(409).json({ message: 'Email already in use' });
+    }
 
-        res.cookie("token", token, {
-        httpOnly:true,     
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path:"/", 
-        maxAge: 60 * 60 * 1000 
-         });
+    const hashpass = await bcrypt.hash(password, 10)
 
-      return res.status(200).json({user:User, role: User.role, message: "Login successful" });
-        
-         
+    const doctor = await Doctor.create({
+      name: fullname,
+      email,
+      password: hashpass,
+      role: 'doctor',
+      specialization,
+      medicallicenseNumber
+    })
 
-        
+    const otpCode = generateotp()
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000)
+    await Otp.create({ email, otp: otpCode, expiresAt });
+    await sendOtpEmail(email, otpCode);
+
+    return res.status(201).json({ message: "Registered", email: doctor.email })
+
   } catch (error) {
-    
+
   }
 }
 
 
 
-
-
-
-
-
-
-exports.logout=async(req,res)=>{
+exports.Login = async (req, res) => {
   try {
-        
+    console.log(req.body);
+
+    const { email, password } = req.body
+    console.log(email)
+    console.log(password);
+
+    const User = await users.findOne({ email })
+    console.log("hello", User);
+
+    if (!User) {
+      console.log("user not founded");
+
+      return res.status(400).json({ message: "user not founded" })
+    }
+
+    if (!User.isVerfied) {
+      return res.status(403).json({ message: "Please verify your email first" });
+    }
+
+    const match = await bcrypt.compare(password, User.password)
+    console.log(match);
+
+    if (!match) {
+      console.log("paswword not match");
+
+      return res.status(401).json({ message: "Incorrect password" })
+    }
+
+
+    const token = jwt.sign({ id: User._id, name: User.name, email: User.email, role: User.role }, process.env.SECRET_KEY, {
+      expiresIn: "1h",
+    })
+    // console.log("token",toekn);
+
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 1000
+    });
+
+    return res.status(200).json({ user: User, role: User.role, message: "Login successful" });
+
+
+
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+
+exports.forgetpassword = async (req, res) => {
+  try {
+    const { email } = req.body
+    const user = await users.findOne({ email })
+    if (!user) {
+      return res.status(404).json({ message: "User not found" })
+    }
+    const otpCode = generateotp()
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000)
+    await Otp.create({ email, otp: otpCode, expiresAt });
+    await sendOtpEmail(email, otpCode);
+    return res.status(200).json({ message: "OTP sent to email" })
+
+  } catch (error) {
+
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+
+  }
+}
+
+
+
+  exports.resetpassword = async (req, res) => {
+    try {
+      const { email, otp, newPassword } = req.body
+      const otpRecord = await Otp.findOne({ email, otp })
+
+
+      if (!otpRecord) {
+        return res.status(404).json({ message: "Invalid OTP" })
+      }
+      if (otpRecord.expiresAt < new Date()) {
+        return res.status(400).json({ message: "OTP expired" })
+      } 
+      const user = await users.findOne({ email })
+      if (!user) {
+        return res.status(404).json({ message: "User not found" })
+      }
+      const hashpass = await bcrypt.hash(newPassword, 10)
+      user.password = hashpass
+      await user.save()
+      return res.status(200).json({ message: "Password reset successful" })
+
+    } catch (error) {
+
+      console.error(error);
+      return res.status(500).json({ message: "Internal server error" });
+
+    }
+  }
+
+
+
+
+
+
+
+
+    exports.logout = async (req, res) => {
+      try {
+
         res.clearCookie("token", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-         path: "/"
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/"
         });
 
 
-  return res.status(200).json({ message: "Logout successful" });
+        return res.status(200).json({ message: "Logout successful" });
 
-  } catch (error) {
-    
-  }
-}
+      } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Internal server error" });        
+
+      }
+    }

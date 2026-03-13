@@ -20,6 +20,8 @@ import Unauthorized from './Pages/Unauthorized';
 import ProtectedRoute from './Components/Auth/ProtectedRoute ';
 import GuestRoute from './Components/GuestRoute';
 import NotFound from './Components/NotFounded';
+import ForgotPassword from './Pages/ForgetPassword';
+import ResetPassword from './Pages/ResetPassword';
 function App() {
   return (
     <>
@@ -32,7 +34,8 @@ function App() {
         <Route path="/Doctor" element={<Doctor />} />
         <Route path="/Patient" element={<Patient />} />
         <Route path="/Verification" element={<Verification />} />
-
+        {/* <Route path="" element={<GuestRoute><ForgotPassword /></GuestRoute>} /> */}
+        <Route path="/forgotpassword" element={<GuestRoute><ResetPassword /></GuestRoute>} />
         {/* Doctor routes */}
         <Route
           path="/pending"

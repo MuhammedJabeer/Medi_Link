@@ -144,7 +144,7 @@ function Signin() {
                 Remember me
               </label>
             </div>
-            <NavLink to="#" className="text-sm text-teal-600 hover:underline font-medium">
+            <NavLink to="/forgotpassword" className="text-sm text-teal-600 hover:underline font-medium">
               Forgot password?
             </NavLink>
           </div>
